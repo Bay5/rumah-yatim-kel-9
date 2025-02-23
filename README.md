@@ -21,4 +21,4 @@ Putra Mahandika = 2110511047
 
 ## ERD
 
-![Rancangan database](ERD.png.png)
+![Rancangan database](ERD.png)
