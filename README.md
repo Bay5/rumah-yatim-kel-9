@@ -6,9 +6,9 @@ Cerahati adalah portal digital yang menghubungkan panti asuhan dengan masyarakat
 
 ## Anggota
 
-Dafa Andika Firmansyah - 2210511049
-Farel Bayhaqi = 2210511073
-Putra Mahandika = 2110511047
+Dafa Andika Firmansyah - 2210511049  
+Farel Bayhaqi - 2210511073  
+Putra Mahandika - 2110511047  
 
 ## Website sejenis
 
