@@ -17,8 +17,8 @@ Putra Mahandika - 2110511047
 
 ## Mockup Halaman Utama
 
-![Halaman utama](mockupCerahati.png)
+![Halaman utama](images/mockupCerahati.png)
 
 ## ERD
 
-![Rancangan database](ERD.png)
+![Rancangan database](images/ERD.png)
