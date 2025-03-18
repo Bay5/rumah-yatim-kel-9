@@ -1,7 +1,19 @@
 {
+  "name": "prog-1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
   "dependencies": {
     "body-parser": "^1.20.3",
     "express": "^4.21.2",
+    "moment-timezone": "^0.5.47",
     "mysql2": "^3.13.0"
   }
 }
