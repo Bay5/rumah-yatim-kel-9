@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 17, 2025 at 11:23 AM
+-- Generation Time: Apr 13, 2025 at 09:30 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -85,8 +85,8 @@ CREATE TABLE `rumah_yatim` (
   `jumlah_anak` int(255) NOT NULL,
   `kapasitas` int(255) NOT NULL,
   `kontak` varchar(255) NOT NULL,
-  `latitude` decimal(10,0) NOT NULL,
-  `longtitude` decimal(10,0) NOT NULL
+  `latitude` decimal(25,20) NOT NULL,
+  `longtitude` decimal(25,20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -94,9 +94,9 @@ CREATE TABLE `rumah_yatim` (
 --
 
 INSERT INTO `rumah_yatim` (`id`, `nama_panti`, `nama_kota`, `nama_pengurus`, `alamat`, `foto`, `deskripsi`, `jumlah_anak`, `kapasitas`, `kontak`, `latitude`, `longtitude`) VALUES
-(1821011401, 'Panti Yatim Cinta Harapan', 'Bandung, Jawa Barat', 'Hj. Romlah Salamah', 'Jl. Margacinta No 4 RT 01 RW 09, Cibereum, Buah Batu, Bandung, Jawa Barat', 'cintakasih.jpg', 'Panti ini didirikan pada tahun 2017 dan didaftarkan ke cerahati pada tahun 2018', 122, 150, '088144578961', 0, 0),
-(1910121401, 'Rumah Yatim Harapan Kasih', 'Jakarta Timur', 'H. Rosyid Badru', 'Jl. Merdeka No 17 RT 06 RW 02, Layur, Rawamangun, Jakarta Timur, DKI Jakarta', 'harapankasih.jpg', 'Panti ini didirikan pada tahun 2017 dan didaftarkan ke cerahati pada tahun 2019', 39, 100, '0812145678104', 0, 0),
-(2010121402, 'Rumah Yatim Amanat Kasih', 'Jakarta Timur', 'Vincent Rosaldi', 'Jl. Sodonk Raya No 8 RT 04 RW 07, Layur, Rawamangun, Jakarta Timur, DKI Jakarta', 'amanatkasih.jpg', 'Panti ini didirikan pada tahun 2019 dan didaftarkan ke cerahati pada tahun 2020', 51, 80, '081212365897', 0, 0);
+(1821011401, 'Panti Yatim Cinta Harapan', 'Bandung, Jawa Barat', 'Hj. Romlah Salamah', 'Jl. Margacinta No 4 RT 01 RW 09, Cibereum, Buah Batu, Bandung, Jawa Barat', 'cintakasih.jpg', 'Panti ini didirikan pada tahun 2017 dan didaftarkan ke cerahati pada tahun 2018', 122, 150, '088144578961', -6.95572354577447700000, 107.65381357900928000000),
+(1910121401, 'Rumah Yatim Harapan Kasih', 'Jakarta Timur', 'H. Rosyid Badru', 'Jl. Merdeka No 17 RT 06 RW 02, Layur, Rawamangun, Jakarta Timur, DKI Jakarta', 'harapankasih.jpg', 'Panti ini didirikan pada tahun 2017 dan didaftarkan ke cerahati pada tahun 2019', 39, 100, '0812145678104', -6.19364600201988000000, 106.90451305016089000000),
+(2010121402, 'Rumah Yatim Amanat Kasih', 'Jakarta Timur', 'Vincent Rosaldi', 'Jl. Sodonk Raya No 8 RT 04 RW 07, Layur, Rawamangun, Jakarta Timur, DKI Jakarta', 'amanatkasih.jpg', 'Panti ini didirikan pada tahun 2019 dan didaftarkan ke cerahati pada tahun 2020', 51, 80, '081212365897', -6.20480637822680950000, 106.89635983666993000000);
 
 -- --------------------------------------------------------
 
