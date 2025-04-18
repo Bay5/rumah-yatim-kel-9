@@ -46,7 +46,7 @@ router.put('/:id', (req, res) => {
             res.status(500).json({ error: err.message });
         } else if (result.affectedRows === 0) {
             res.status(404).json({ message: 'Donation not found' });
-        } else{
+        } else {
             res.json({ message: 'Donation updated successfully' });
         }
     });

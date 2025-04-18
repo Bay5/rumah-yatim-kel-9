@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 13, 2025 at 09:30 AM
+-- Generation Time: Apr 18, 2025 at 07:36 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -41,6 +41,28 @@ CREATE TABLE `bookmark` (
 INSERT INTO `bookmark` (`id`, `user_id`, `rumah_yatim_id`, `created_at`) VALUES
 (2001, 1002, 1910121401, '2025-03-17 09:44:22'),
 (2002, 1001, 1821011401, '2025-03-17 09:40:29');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doa`
+--
+
+CREATE TABLE `doa` (
+  `id_doa` int(11) NOT NULL,
+  `nama_doa` varchar(100) NOT NULL,
+  `isi_doa` text NOT NULL,
+  `latin` text NOT NULL,
+  `arti` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `doa`
+--
+
+INSERT INTO `doa` (`id_doa`, `nama_doa`, `isi_doa`, `latin`, `arti`) VALUES
+(1, 'Doa untuk Anak Yatim', 'اللَّهُمَّ اكْفِلْهُمْ، وَارْزُقْهُمْ، وَاجْعَلْهُمْ مِنَ الصَّالِحِينَ', 'Allahumma ikfilhum, warzuqhum, waj‘alhum minash-shalihin', 'Ya Allah, lindungilah mereka, berilah rezeki kepada mereka, dan jadikanlah mereka termasuk orang-orang yang saleh.'),
+(2, 'Doa Memohon Kemudahan Rezeki', 'اللَّهُمَّ اكْفِنِي بِحَلاَلِكَ عَنْ حَرَامِكَ، وَأَغْنِنِي بِفَضْلِكَ عَمَّنْ سِوَاكَ', 'Allahumma akfini bihalālika ‘an ḥarāmika, wa aghnini bifaḍlika ‘amman siwāk.', 'Ya Allah, cukupkanlah aku dengan rezeki-Mu yang halal, jauhkan aku dari yang haram, dan kayakanlah aku dengan anugerah-Mu dari selain-Mu.');
 
 -- --------------------------------------------------------
 
@@ -135,6 +157,12 @@ ALTER TABLE `bookmark`
   ADD KEY `userid` (`user_id`);
 
 --
+-- Indexes for table `doa`
+--
+ALTER TABLE `doa`
+  ADD PRIMARY KEY (`id_doa`);
+
+--
 -- Indexes for table `donation`
 --
 ALTER TABLE `donation`
@@ -153,6 +181,16 @@ ALTER TABLE `rumah_yatim`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `doa`
+--
+ALTER TABLE `doa`
+  MODIFY `id_doa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Constraints for dumped tables
