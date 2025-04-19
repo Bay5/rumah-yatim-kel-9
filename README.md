@@ -130,21 +130,21 @@ node app.js
 
 ### API Kompleks (15 Endpoints)
 
-#### Donation Complex Routes
+##### Donation Complex Routes
 - **POST** `/donation/create` — Buat donasi baru (dengan update leaderboard)
 - **GET** `/donation/history` — Get riwayat donasi (dengan filtering & pagination)
 - **GET** `/donation/:id` — Get detail donasi (dengan relasi)
 - **GET** `/donation/statistics` — Get statistik donasi
 - **GET** `/donation/monthly-report` — Get laporan donasi bulanan
 
-#### Rumah Yatim Complex Routes
+##### Rumah Yatim Complex Routes
 - **GET** `/rumah-yatim` — Get daftar rumah yatim dengan statistik
 - **GET** `/rumah-yatim/:id` — Get detail rumah yatim dengan riwayat donasi
 - **GET** `/rumah-yatim/:id/statistics` — Get statistik rumah yatim
 - **GET** `/rumah-yatim/:id/donors` — Get daftar donatur
 - **GET** `/rumah-yatim/nearby` — Get rumah yatim terdekat
 
-#### User Complex Routes
+##### User Complex Routes
 - **GET** `/users/dashboard` — Get dashboard user
 - **GET** `/users/donation-summary` — Get ringkasan donasi user
 - **GET** `/users/impact-report` — Get laporan dampak donasi
@@ -153,22 +153,22 @@ node app.js
 
 ### API NoSQL - Cache Routes (13 Endpoints)
 
-#### Leaderboard Cache
+##### Leaderboard Cache
 - **GET** `/cache/leaderboard` — Get leaderboard donatur
 - **POST** `/cache/leaderboard/refresh` — Refresh cache leaderboard
 - **GET** `/cache/leaderboard/monthly` — Get leaderboard bulanan
 
-#### Donation Cache
+##### Donation Cache
 - **GET** `/cache/donation` — Get semua data donasi
 - **GET** `/cache/donation/:id` — Get detail donasi
 - **GET** `/cache/donation/users/:id` — Get donasi per user
 
-#### Users Cache
+##### Users Cache
 - **GET** `/cache/users` — Get semua data users
 - **GET** `/cache/users/:id` — Get detail user
 - **GET** `/cache/users/active` — Get users aktif
 
-#### Rumah Yatim Cache
+##### Rumah Yatim Cache
 - **GET** `/cache/rumah-yatim` — Get semua data rumah yatim
 - **GET** `/cache/rumah-yatim/:id` — Get detail rumah yatim
 - **GET** `/cache/rumah-yatim/popular` — Get rumah yatim populer
@@ -182,4 +182,12 @@ Sistem menggunakan JWT (JSON Web Token) untuk autentikasi dengan fitur:
 - Secure password hashing dengan bcrypt
 - Refresh token mechanism
 - Rate limiting pada endpoint auth
+
+#### Integrasi Third Party
+##### 1. Google Maps Static API
+Google Maps Static API digunakan untuk menampilkan lokasi rumah yatim dalam bentuk gambar peta statis. Ketika user mengakses detail rumah yatim melalui endpoint `GET /rumah-yatim/:id`, sistem akan mengambil koordinat latitude dan longitude dari database, kemudian menghasilkan URL gambar peta statis yang menunjukkan lokasi rumah yatim tersebut dengan marker. Implementasi ini dipilih karena lebih ringan dibandingkan peta interaktif dan sesuai dengan kebutuhan untuk menampilkan lokasi tetap.
+
+##### 2. hCaptcha
+Sistem mengimplementasikan hCaptcha untuk melindungi form-form penting dari bot dan automated submissions. hCaptcha diterapkan pada endpoint autentikasi (`/auth/register` dan `/auth/login`) untuk memastikan bahwa user yang mendaftar dan login adalah manusia. hCaptcha dipilih karena menawarkan solusi CAPTCHA yang lebih ringan dan privacy-focused dibandingkan alternatif lainnya.
+
 
