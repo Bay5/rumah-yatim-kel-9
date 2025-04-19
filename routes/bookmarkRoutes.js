@@ -65,7 +65,7 @@ router.delete('/:id', (req, res) => {
     });
 });
 
-// Daftar bookmark oleh salah satu user
+// 1 Daftar bookmark oleh salah satu user
 router.get('/user/:user_id', (req, res) => {
     const { user_id } = req.params;
     const query = `
@@ -78,6 +78,34 @@ router.get('/user/:user_id', (req, res) => {
     `;
 
     db.query(query, [user_id], (err, results) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// 7 hubungan Bookmark dan donasi user
+router.get('/user-correlation/:userId', (req, res) => {
+    const userId = req.params.userId;
+    
+    const query = `
+        SELECT 
+            ry.id AS rumah_yatim_id,
+            ry.nama_panti,
+            COUNT(DISTINCT b.id) AS bookmark_count,
+            COUNT(DISTINCT d.id) AS donation_count,
+            COALESCE(SUM(d.amount), 0) AS total_donated
+        FROM bookmark b
+        JOIN rumah_yatim ry ON b.rumah_yatim_id = ry.id
+        LEFT JOIN donation d ON d.rumah_yatim_id = ry.id AND d.user_id = ?
+        WHERE b.user_id = ?
+        GROUP BY ry.id, ry.nama_panti
+        ORDER BY bookmark_count DESC
+    `;
+
+    db.query(query, [userId, userId], (err, results) => {
         if (err) {
             res.status(500).json({ error: err.message });
         } else {
