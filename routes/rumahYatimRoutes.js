@@ -24,6 +24,29 @@ router.get('/', (req, res) => {
     });
 });
 
+// list panti dengan bookmark terbanyak
+router.get('/popular', (req, res) => {
+    console.log('Popular endpoint hit');
+    const query = `
+        SELECT r.*, COUNT(b.id) as bookmark_count 
+        FROM rumah_yatim r 
+        LEFT JOIN bookmark b ON r.id = b.rumah_yatim_id 
+        GROUP BY r.id 
+        ORDER BY bookmark_count DESC
+    `;
+
+    console.log('Executing query:', query);
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Database error:', err);
+            res.status(500).json({ error: err.message });
+        } else {
+            console.log('Query results:', results);
+            res.json(results);
+        }
+    });
+});
+
 router.get('/:id', (req, res) => {
     const { id } = req.params;
     db.query('SELECT * FROM rumah_yatim WHERE id = ?', [id], (err, result) => {

@@ -46,7 +46,7 @@ router.put('/:id', (req, res) => {
             res.status(500).json({ error: err.message });
         } else if (result.affectedRows === 0) {
             res.status(404).json({ message: 'Bookmark not found' });
-        } else{
+        } else {
             res.json({ message: 'Bookmark updated successfully' });
         }
     });
@@ -64,5 +64,27 @@ router.delete('/:id', (req, res) => {
         }
     });
 });
+
+// Daftar bookmark oleh salah satu user
+router.get('/user/:user_id', (req, res) => {
+    const { user_id } = req.params;
+    const query = `
+        SELECT 
+            bookmark.id AS bookmark_id,
+            rumah_yatim.*
+        FROM bookmark
+        JOIN rumah_yatim ON bookmark.rumah_yatim_id = rumah_yatim.id
+        WHERE bookmark.user_id = ?
+    `;
+
+    db.query(query, [user_id], (err, results) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.json(results);
+        }
+    });
+});
+
 
 module.exports = router;
