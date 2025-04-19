@@ -17,12 +17,31 @@ const cacheBookmarkRoutes = require('./cacheRoutes/bookmarkCache');
 const cacheDoaRoutes = require('./cacheRoutes/doaCache');
 const cacheDonasiRoutes = require('./cacheRoutes/donationCache');
 const cachePantiRoutes = require('./cacheRoutes/rumahYatimCache');
+const cacheLeaderboardRoutes = require('./cacheRoutes/leaderboardCache');
 
 const app = express();
 const port = 3000;
 
 const redisClient = redis.createClient({
-    url: 'redis://localhost:6379'
+    url: 'redis://localhost:6379',
+    socket: {
+        reconnectStrategy: (retries) => {
+            console.log(`Redis reconnect attempt ${retries}`);
+            return Math.min(retries * 100, 3000);
+        }
+    }
+});
+
+redisClient.on('connect', () => {
+    console.log('Redis client connected');
+});
+
+redisClient.on('error', (err) => {
+    console.error('Redis Client Error:', err);
+});
+
+redisClient.on('ready', () => {
+    console.log('Redis client ready');
 });
 
 app.use(bodyParser.json());
@@ -63,6 +82,11 @@ async function startServer() {
             next();
         }, cachePantiRoutes);
 
+         app.use('/cache/leaderboard', (req, res, next) => {
+            req.redisClient = redisClient;
+            next();
+        }, cacheLeaderboardRoutes);
+        
         app.listen(port, () => {
             console.log(`Server running on port ${port}`);
         });
