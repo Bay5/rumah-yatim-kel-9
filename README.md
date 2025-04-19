@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/6ed66e2e-5b04-41a6-b339-347123db1599)# Kelompok 9 SoA
+# Kelompok 9 SoA
 
 ## Case
 
