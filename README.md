@@ -1,4 +1,4 @@
-# Kelompok 9 SoA
+![image](https://github.com/user-attachments/assets/6ed66e2e-5b04-41a6-b339-347123db1599)# Kelompok 9 SoA
 
 ## Case
 
@@ -22,13 +22,11 @@ Putra Mahandika - 2110511047
 
 | Feature | Status |
 |---------|---------|
-| API Sederhana | 25 API Endpoints ✅ |
-| API Kompleks | 15 API Endpoints ✅ |
-| API NoSQL (Redis) | 13 API Endpoints ✅ |
-| Frontend | EJS Template Engine ✅ |
-| Database | MySQL ✅ |
-| Authentication | JWT ✅ |
-| Documentation | Inline & README ✅ |
+| API Sederhana | 25 API Endpoints |
+| API Kompleks | 15 API Endpoints |
+| API NoSQL (Redis) | 14 API Endpoints |
+| Database | MySQL |
+| Documentation | Inline & README |
 
 ## Website sejenis
 
@@ -98,7 +96,6 @@ node app.js
 - **POST** `/auth/register` — Registrasi user baru
 - **POST** `/auth/login` — Login user
 - **POST** `/auth/logout` — Logout user
-- **POST** `/auth/refresh-token` — Refresh JWT token
 
 #### Users Routes
 - **GET** `/users` — Get semua users
@@ -151,12 +148,11 @@ node app.js
 - **GET** `/users/recommendations` — Get rekomendasi rumah yatim
 - **GET** `/users/activity-log` — Get log aktivitas user
 
-### API NoSQL - Cache Routes (13 Endpoints)
+### API NoSQL - Cache Routes (14 Endpoints)
 
 ##### Leaderboard Cache
 - **GET** `/cache/leaderboard` — Get leaderboard donatur
 - **POST** `/cache/leaderboard/refresh` — Refresh cache leaderboard
-- **GET** `/cache/leaderboard/monthly` — Get leaderboard bulanan
 
 ##### Donation Cache
 - **GET** `/cache/donation` — Get semua data donasi
@@ -174,9 +170,18 @@ node app.js
 - **GET** `/cache/rumah-yatim/popular` — Get rumah yatim populer
 - **GET** `/cache/rumah-yatim/featured` — Get rumah yatim unggulan
 
+##### Doa Cache
+- **GET** `/cache/doa— Get semua data doa
+- **GET** `/cache/doa/:id — Get data doa berdasarkan id
+
+##### Doa Cache
+- **GET** `/cache/bookmark — Get semua data bookmark
+- **GET** `/cache/bookmark/:id — Get data bookmarkberdasarkan id
+
+  
 ### Authentication & Authorization
 
-Sistem menggunakan JWT (JSON Web Token) untuk autentikasi dengan fitur:
+Sistem menggunakan autentikasi dengan fitur:
 - Token expires setelah 1 jam
 - Role-based access control (Admin, User)
 - Secure password hashing dengan bcrypt
@@ -184,10 +189,10 @@ Sistem menggunakan JWT (JSON Web Token) untuk autentikasi dengan fitur:
 - Rate limiting pada endpoint auth
 
 #### Integrasi Third Party
-##### 1. Google Maps Static API
-Google Maps Static API digunakan untuk menampilkan lokasi rumah yatim dalam bentuk gambar peta statis. Ketika user mengakses detail rumah yatim melalui endpoint `GET /rumah-yatim/:id`, sistem akan mengambil koordinat latitude dan longitude dari database, kemudian menghasilkan URL gambar peta statis yang menunjukkan lokasi rumah yatim tersebut dengan marker. Implementasi ini dipilih karena lebih ringan dibandingkan peta interaktif dan sesuai dengan kebutuhan untuk menampilkan lokasi tetap.
+##### 1. OpenStreetMap API
+OpenStreetMap API digunakan untuk menampilkan lokasi rumah yatim dalam bentuk peta interaktif. Ketika user mengakses detail rumah yatim melalui endpoint `GET /rumah-yatim/:id`, sistem akan mengambil koordinat latitude dan longitude dari database, kemudian menampilkan peta OpenStreetMap dengan marker lokasi rumah yatim tersebut. OpenStreetMap dipilih karena bersifat open source, gratis, dan menyediakan data peta yang detail untuk wilayah Indonesia. Implementasi menggunakan library Leaflet.js memungkinkan interaksi yang responsif dan mudah dikustomisasi.
 
-##### 2. hCaptcha
-Sistem mengimplementasikan hCaptcha untuk melindungi form-form penting dari bot dan automated submissions. hCaptcha diterapkan pada endpoint autentikasi (`/auth/register` dan `/auth/login`) untuk memastikan bahwa user yang mendaftar dan login adalah manusia. hCaptcha dipilih karena menawarkan solusi CAPTCHA yang lebih ringan dan privacy-focused dibandingkan alternatif lainnya.
+##### 2. Google reCAPTCHA v2
+Sistem mengimplementasikan Google reCAPTCHA v2 untuk melindungi form-form penting dari bot dan automated submissions. reCAPTCHA diterapkan pada endpoint autentikasi (`/auth/register` dan `/auth/login`) untuk memastikan bahwa user yang mendaftar dan login adalah manusia. Google reCAPTCHA v2 dipilih karena memberikan keseimbangan yang baik antara keamanan dan user experience, dimana pengguna diminta untuk menyelesaikan challenge sederhana seperti memilih gambar atau mencentang kotak "I'm not a robot". Sistem ini mudah diimplementasikan, memiliki dukungan multi-bahasa, dan terbukti efektif dalam mencegah spam dan abuse pada form.
 
 
