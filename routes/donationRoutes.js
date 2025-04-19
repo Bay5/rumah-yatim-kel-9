@@ -37,6 +37,19 @@ router.get('/:id', (req, res) => {
     });
 });
 
+router.get('/users/:id', (req, res) => {
+    const { id } = req.params;
+    db.query('SELECT * FROM donation WHERE user_id = ?', [id], (err, result) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else if (result.length === 0) {
+            res.status(404).json({ message: 'Donation not found' });
+        } else {
+            res.json(result)
+        }
+    });
+});
+
 router.put('/:id', (req, res) => {
     const { id } = req.params;
     const { user_id, rumah_yatim_id, amount, payment_method, status, transaction_id } = req.body;
