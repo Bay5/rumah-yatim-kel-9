@@ -93,37 +93,45 @@ node app.js
 ### API Sederhana (25 Endpoints)
 
 #### Auth Routes
-- **POST** `/auth/register` — Registrasi user baru
 - **POST** `/auth/login` — Login user
-- **POST** `/auth/logout` — Logout user
 
 #### Users Routes
 - **GET** `/users` — Get semua users
-- **GET** `/users/profile` — Get profil user
-- **PUT** `/users/profile` — Update profil user
+- **GET** `/users/:id` — Get user by id
+- **PUT** `/users/:id` — Update user by id
 - **DELETE** `/users/:id` — Hapus user
-- **GET** `/users/donations` — Get riwayat donasi user
+- **POST** `/users/` — Tambah user baru
 
 #### Doa Routes
 - **GET** `/doa` — Get semua doa
-- **POST** `/doa/create` — Tambah doa baru
-- **GET** `/doa/:id` — Get detail doa
-- **PUT** `/doa/:id` — Update doa
-- **DELETE** `/doa/:id` — Hapus doa
+- **POST** `/doa/` — Tambah doa baru
+- **GET** `/doa/:id` — Get doa by id
+- **PUT** `/doa/:id` — Update doa by id
+- **DELETE** `/doa/:id` — Hapus doa by id
 
 #### Bookmark Routes
 - **GET** `/bookmark` — Get semua bookmark
-- **POST** `/bookmark/add` — Tambah bookmark
-- **DELETE** `/bookmark/:id` — Hapus bookmark
-- **GET** `/bookmark/user` — Get bookmark by user
+- **POST** `/bookmark/` — Tambah bookmark
+- **PUT** `/bookmark/:id` — Update bookmark by id
+- **DELETE** `/bookmark/:id` — Hapus bookmark by id
+- **GET** `/bookmark/:id` — Get bookmark by id
 
-#### Rumah Yatim Basic Routes
-- **GET** `/rumah-yatim/list` — Get daftar basic rumah yatim
-- **POST** `/rumah-yatim/create` — Tambah rumah yatim baru
-- **GET** `/rumah-yatim/basic/:id` — Get basic info rumah yatim
-- **PUT** `/rumah-yatim/basic/:id` — Update basic info rumah yatim
-- **DELETE** `/rumah-yatim/:id` — Hapus rumah yatim
-- **POST** `/rumah-yatim/image` — Upload gambar rumah yatim
+#### Rumah Yatim Routes
+- **GET** `/rumah-yatim/` — Get semua rumah yatim
+- **POST** `/rumah-yatim/` — Tambah rumah yatim baru
+- **GET** `/rumah-yatim/:id` — Get rumah yatim by id
+- **PUT** `/rumah-yatim/:id` — Update rumah yatim by id
+- **DELETE** `/rumah-yatim/:id` — Hapus rumah yatim by id
+
+#### Donation Routes
+- **GET** `/donation` — Get semua donation
+- **POST** `/donation/` — Tambah donation
+- **PUT** `/donation/:id` — Update donation by id
+- **DELETE** `/donation/:id` — Hapus donation by id
+- **GET** `/donation/:id` — Get donation by id
+
+#### Register Routes
+- **POST** `/register/` — Daftar akun user baru
 
 ### API Kompleks (15 Endpoints)
 
@@ -162,19 +170,16 @@ node app.js
 ##### Users Cache
 - **GET** `/cache/users` — Get semua data users
 - **GET** `/cache/users/:id` — Get detail user
-- **GET** `/cache/users/active` — Get users aktif
 
 ##### Rumah Yatim Cache
 - **GET** `/cache/rumah-yatim` — Get semua data rumah yatim
 - **GET** `/cache/rumah-yatim/:id` — Get detail rumah yatim
-- **GET** `/cache/rumah-yatim/popular` — Get rumah yatim populer
-- **GET** `/cache/rumah-yatim/featured` — Get rumah yatim unggulan
 
 ##### Doa Cache
 - **GET** `/cache/doa— Get semua data doa
 - **GET** `/cache/doa/:id — Get data doa berdasarkan id
 
-##### Doa Cache
+##### Bookmark Cache
 - **GET** `/cache/bookmark — Get semua data bookmark
 - **GET** `/cache/bookmark/:id — Get data bookmarkberdasarkan id
 
