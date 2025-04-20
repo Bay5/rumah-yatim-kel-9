@@ -1,7 +1,5 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const swaggerUi = require('swagger-ui-express');
-const swaggerSpecs = require('./swagger');
 const rumahYatimRoutes = require('./routes/rumahYatimRoutes');
 const usersRoutes = require('./routes/usersRoutes');
 const bookmarkRoutes = require('./routes/bookmarkRoutes');
@@ -24,8 +22,8 @@ const cacheLeaderboardRoutes = require('./cacheRoutes/leaderboardCache');
 const app = express();
 const port = 3000;
 
-// Swagger UI setup
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+const { swaggerUi, specs } = require('./swagger');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 const redisClient = redis.createClient({
     url: 'redis://localhost:6379',
@@ -51,13 +49,12 @@ redisClient.on('ready', () => {
 
 app.use(bodyParser.json());
 
-// Main routes
 app.use('/register', registerRoutes);
-app.use('/rumah-yatim', rumahYatimRoutes);
+app.use('/rumah_yatim', rumahYatimRoutes);
 app.use('/users', usersRoutes);
 app.use('/bookmark', bookmarkRoutes);
 app.use('/donation', donationRoutes);
-app.use('/auth', authRoutes);
+app.use('/login', authRoutes);
 app.use('/doa', doaRoutes);
 
 app.use(express.static(path.join(__dirname, '/frontend')));
@@ -65,45 +62,39 @@ app.use(express.static(path.join(__dirname, '/frontend')));
 async function startServer() {
     try {
         await redisClient.connect();
-        console.log('Connected to Redis');
+        console.log('Terhubung ke Redis');
 
-        // Cache routes
         app.use('/cache/users', (req, res, next) => {
             req.redisClient = redisClient;
             next();
         }, cacheUserRoutes);
-        
         app.use('/cache/bookmark', (req, res, next) => {
             req.redisClient = redisClient;
             next();
         }, cacheBookmarkRoutes);
-        
         app.use('/cache/doa', (req, res, next) => {
             req.redisClient = redisClient;
             next();
         }, cacheDoaRoutes);
-        
         app.use('/cache/donation', (req, res, next) => {
             req.redisClient = redisClient;
             next();
         }, cacheDonasiRoutes);
-        
-        app.use('/cache/rumah-yatim', (req, res, next) => {
+        app.use('/cache/rumah_yatim', (req, res, next) => {
             req.redisClient = redisClient;
             next();
         }, cachePantiRoutes);
 
-        app.use('/cache/leaderboard', (req, res, next) => {
+         app.use('/cache/leaderboard', (req, res, next) => {
             req.redisClient = redisClient;
             next();
         }, cacheLeaderboardRoutes);
         
         app.listen(port, () => {
             console.log(`Server running on port ${port}`);
-            console.log(`API Documentation available at http://localhost:${port}/api-docs`);
         });
     } catch (err) {
-        console.error('Failed to connect to Redis:', err);
+        console.error('Gagal terhubung ke Redis:', err);
     }
 }
 

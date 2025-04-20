@@ -1,74 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db');
+const db = require('../config/db promised');
 
-/**
- * @swagger
- * tags:
- *   name: Cache - Rumah Yatim
- *   description: Orphanage data caching endpoints
- */
-
-/**
- * @swagger
- * /cache/rumah-yatim:
- *   get:
- *     summary: Get all cached orphanages
- *     tags: [Cache - Rumah Yatim]
- *     responses:
- *       200:
- *         description: List of orphanages retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 source:
- *                   type: string
- *                   enum: [cache, database]
- *                   description: Data source (cache or database)
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/RumahYatim'
- *       500:
- *         description: Server error
- */
-
-/**
- * @swagger
- * /cache/rumah-yatim/{id}:
- *   get:
- *     summary: Get cached orphanage by ID
- *     tags: [Cache - Rumah Yatim]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Orphanage ID
- *     responses:
- *       200:
- *         description: Orphanage data retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 source:
- *                   type: string
- *                   enum: [cache, database]
- *                   description: Data source (cache or database)
- *                 data:
- *                   $ref: '#/components/schemas/RumahYatim'
- *       404:
- *         description: Orphanage not found
- *       500:
- *         description: Server error
- */
-
-async function getRumahYatimFromDatabase() {
+async function getPantiFromDatabase() {
   try {
     const [rows] = await db.query('SELECT * FROM rumah_yatim');
     return rows || null;
@@ -78,62 +12,166 @@ async function getRumahYatimFromDatabase() {
   }
 }
 
+/**
+ * @swagger
+ * /cache/rumah_yatim:
+ *   get:
+ *     summary: Mendapatkan daftar semua panti asuhan
+ *     description: |
+ *       Mengambil seluruh data panti asuhan dengan mekanisme caching menggunakan Redis.
+ *       Data akan tersimpan di cache selama 5 menit (300 detik) setelah pertama kali diambil dari database.
+ *     tags: [rumah-yatim - Cache]
+ *     responses:
+ *       200:
+ *         description: Berhasil mendapatkan data panti
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PantiResponse'
+ *             examples:
+ *               fromCache:
+ *                 summary: Response dari cache
+ *                 value:
+ *                   source: cache
+ *                   data:
+ *                     - id: 1
+ *                       nama_panti: "Panti Asuhan Bahagia"
+ *                       alamat: "Jl. Contoh No. 123"
+ *                       jumlah_anak: 30
+ *               fromDatabase:
+ *                 summary: Response dari database
+ *                 value:
+ *                   source: database
+ *                   data:
+ *                     - id: 1
+ *                       nama_panti: "Panti Asuhan Bahagia"
+ *                       alamat: "Jl. Contoh No. 123"
+ *                       jumlah_anak: 30
+ *       500:
+ *         description: Kesalahan server internal
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Terjadi kesalahan server"
+ */
 router.get('/', async (req, res) => {
   const redisClient = req.redisClient;
   try {
-    const cachedOrphanages = await redisClient.get('orphanages');
+    const cachedPanti = await redisClient.get('panti');
 
-    if (cachedOrphanages) {
+    if (cachedPanti) {
       return res.json({
         source: 'cache',
-        data: JSON.parse(cachedOrphanages)
+        data: JSON.parse(cachedPanti)
       });
     }
 
-    const orphanagesData = await getRumahYatimFromDatabase();
-    await redisClient.setEx('orphanages', 300, JSON.stringify(orphanagesData));
+    const pantiData = await getPantiFromDatabase();
+
+    await redisClient.setEx('panti', 300, JSON.stringify(pantiData));
 
     res.json({
       source: 'database',
-      data: orphanagesData
+      data: pantiData
     });
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Terjadi kesalahan server' });
   }
 });
 
+/**
+ * @swagger
+ * /cache/rumah_yatim/{id}:
+ *   get:
+ *     summary: Mendapatkan detail panti asuhan berdasarkan ID
+ *     description: |
+ *       Mengambil data spesifik satu panti asuhan dengan sistem caching Redis.
+ *       Data individual akan di-cache selama 5 menit setelah pertama kali diakses.
+ *     tags: [rumah-yatim - Cache]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID panti asuhan yang ingin dilihat
+ *     responses:
+ *       200:
+ *         description: Berhasil mendapatkan data panti
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PantiResponse'
+ *             examples:
+ *               fromCache:
+ *                 value:
+ *                   source: cache
+ *                   data:
+ *                     id: 1
+ *                     nama_panti: "Panti Asuhan Bahagia"
+ *                     alamat: "Jl. Contoh No. 123"
+ *                     jumlah_anak: 30
+ *               fromDatabase:
+ *                 value:
+ *                   source: database
+ *                   data:
+ *                     id: 1
+ *                     nama_panti: "Panti Asuhan Bahagia"
+ *                     alamat: "Jl. Contoh No. 123"
+ *                     jumlah_anak: 30
+ *       404:
+ *         description: Panti tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Panti tidak ditemukan"
+ *       500:
+ *         description: Kesalahan server
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Server error"
+ */
 router.get('/:id', async (req, res) => {
-  const id = req.params.id;
-  const redisClient = req.redisClient;
+    const id = req.params.id;
+    const redisClient = req.redisClient;
 
-  try {
-    const cachedOrphanage = await redisClient.get(`orphanage:${id}`);
+    try {
+        const cachedPanti = await redisClient.get(`panti:${id}`);
 
-    if (cachedOrphanage) {
-      return res.json({
-        source: 'cache',
-        data: JSON.parse(cachedOrphanage)
-      });
+        if (cachedPanti) {
+            return res.json({
+                source: 'cache',
+                data: JSON.parse(cachedPanti)
+            });
+        }
+
+        const [rows] = await db.query('SELECT * FROM rumah_yatim WHERE id = ?', [id]);
+        const panti = rows[0];
+
+        if (!panti) {
+            return res.status(404).json({ error: 'panti tidak ditemukan' });
+        }
+
+        await redisClient.setEx(`panti:${id}`, 300, JSON.stringify(panti)); 
+
+        res.json({
+            source: 'database',
+            data: panti
+        });
+
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Server error' });
     }
-
-    const [rows] = await db.query('SELECT * FROM rumah_yatim WHERE id = ?', [id]);
-    const orphanage = rows[0];
-
-    if (!orphanage) {
-      return res.status(404).json({ error: 'Orphanage not found' });
-    }
-
-    await redisClient.setEx(`orphanage:${id}`, 300, JSON.stringify(orphanage));
-
-    res.json({
-      source: 'database',
-      data: orphanage
-    });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
 });
+
 
 module.exports = router;

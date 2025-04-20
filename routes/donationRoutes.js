@@ -4,405 +4,471 @@ const db = require('../config/db');
 
 /**
  * @swagger
- * tags:
- *   name: Donations
- *   description: Donation management endpoints
- */
-
-/**
- * @swagger
  * /donation:
- *   get:
- *     summary: Get all donations
- *     tags: [Donations]
- *     responses:
- *       200:
- *         description: List of donations retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Donation'
- *       500:
- *         description: Server error
  *   post:
- *     summary: Create a new donation
- *     tags: [Donations]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Donation'
- *     responses:
- *       201:
- *         description: Donation created successfully
- *       500:
- *         description: Server error
- */
-
-/**
- * @swagger
- * /donation/{id}:
- *   get:
- *     summary: Get donation by ID
- *     tags: [Donations]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Donation ID
- *     responses:
- *       200:
- *         description: Donation details retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Donation'
- *       404:
- *         description: Donation not found
- *       500:
- *         description: Server error
- *   put:
- *     summary: Update donation status
- *     tags: [Donations]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Donation ID
+ *     summary: Menambahkan donasi baru
+ *     description: Menambahkan data donasi baru ke dalam database
+ *     tags:
+ *       - Donasi
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - status
  *             properties:
+ *               id:
+ *                 type: string
+ *               user_id:
+ *                 type: string
+ *               rumah_yatim_id:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               payment_method:
+ *                 type: string
  *               status:
  *                 type: string
- *                 enum: [Pending, Completed, Failed]
+ *               transaction_id:
+ *                 type: string
  *     responses:
- *       200:
- *         description: Donation status updated successfully
- *       404:
- *         description: Donation not found
+ *       201:
+ *         description: Donasi berhasil ditambahkan
  *       500:
- *         description: Server error
+ *         description: Terjadi kesalahan pada server
  */
+router.post('/', (req, res) => {
+    const { id, user_id, rumah_yatim_id, amount, payment_method, status, transaction_id } = req.body;
+    const query = 'INSERT INTO donation (id, user_id, rumah_yatim_id, amount, payment_method, status, transaction_id) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    db.query(query, [id, user_id, rumah_yatim_id, amount, payment_method, status, transaction_id], (err, result) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.status(201).json({ message: 'Donation added successfully', id: result.insertId });
+        }
+    });
+});
 
 /**
  * @swagger
- * /donation/user/{userId}:
+ * /donation:
  *   get:
- *     summary: Get all donations by user ID
- *     tags: [Donations]
+ *     summary: Mendapatkan semua data donasi
+ *     description: Mengambil semua data donasi dari database
+ *     tags:
+ *       - Donasi
+ *     responses:
+ *       200:
+ *         description: Daftar donasi
+ *       500:
+ *         description: Terjadi kesalahan pada server
+ */
+router.get('/', (req, res) => {
+    db.query('SELECT * FROM donation', (err, result) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.json(result)
+        }
+    });
+});
+
+/**
+ * @swagger
+ * /donation/payment-trends:
+ *   get:
+ *     summary: Mendapatkan tren pembayaran donasi berdasarkan metode pembayaran
+ *     description: Menampilkan tren pembayaran donasi berdasarkan metode pembayaran dan bulan
+ *     tags:
+ *       - Donasi
+ *     responses:
+ *       200:
+ *         description: Daftar tren pembayaran
+ *       500:
+ *         description: Terjadi kesalahan pada server
+ */
+// 13 Donasi berdasarkan metode pembayaran
+router.get('/payment-trends', (req, res) => {
+    console.log('Payment trends endpoint called');
+    const query = `
+        SELECT 
+            payment_method,
+            COUNT(*) as total_transactions,
+            SUM(amount) as total_amount,
+            AVG(amount) as average_amount,
+            DATE_FORMAT(created_at, '%Y-%m') as month
+        FROM donation
+        GROUP BY payment_method, DATE_FORMAT(created_at, '%Y-%m')
+        ORDER BY month DESC, total_amount DESC
+    `;
+    
+    console.log('Executing query:', query);
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Database error:', err);
+            res.status(500).json({ error: err.message });
+        } else {
+            console.log('Query results:', results);
+            res.json(results);
+        }
+    });
+});
+
+/**
+ * @swagger
+ * /donation/users/{id}:
+ *   get:
+ *     summary: Mendapatkan data donasi oleh pengguna
+ *     description: Mengambil data donasi oleh pengguna berdasarkan ID
+ *     tags:
+ *       - Donasi
  *     parameters:
  *       - in: path
- *         name: userId
+ *         name: id
  *         required: true
  *         schema:
- *           type: integer
- *         description: User ID
+ *           type: string
  *     responses:
  *       200:
- *         description: List of user's donations retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Donation'
+ *         description: Daftar donasi oleh pengguna
  *       404:
- *         description: No donations found for user
+ *         description: Donasi tidak ditemukan
  *       500:
- *         description: Server error
+ *         description: Terjadi kesalahan pada server
  */
+// 3 donasi + nama email
+router.get('/users/:id', (req, res) => {
+    const { id } = req.params;
+    const query = `
+        SELECT d.*, u.name, u.email 
+        FROM donation d
+        JOIN users u ON d.user_id = u.id
+        WHERE d.user_id = ?
+    `;
+    db.query(query, [id], (err, result) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else if (result.length === 0) {
+            res.status(404).json({ message: 'Donation not found' });
+        } else {
+            res.json(result);
+        }
+    });
+});
 
 /**
  * @swagger
- * /donation/orphanage/{orphanageId}:
+ * /donation/{id}:
  *   get:
- *     summary: Get all donations by orphanage ID
- *     tags: [Donations]
+ *     summary: Mendapatkan data donasi berdasarkan ID
+ *     description: Mengambil data donasi berdasarkan ID
+ *     tags:
+ *       - Donasi
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Data donasi ditemukan
+ *       404:
+ *         description: Donasi tidak ditemukan
+ *       500:
+ *         description: Terjadi kesalahan pada server
+ */
+router.get('/:id', (req, res) => {
+    const { id } = req.params;
+    db.query('SELECT * FROM donation WHERE id=?', [id], (err, result) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else if (result.length === 0) {
+            res.status(404).json({ message: 'Donation not found' });
+        } else {
+            res.json(result)
+        }
+    });
+});
+
+/**
+ * @swagger
+ * /donation/{id}:
+ *   put:
+ *     summary: Mengupdate data donasi berdasarkan ID
+ *     description: Mengupdate informasi donasi berdasarkan ID
+ *     tags:
+ *       - Donasi
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user_id:
+ *                 type: string
+ *               rumah_yatim_id:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               payment_method:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *               transaction_id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Donasi berhasil diperbarui
+ *       404:
+ *         description: Donasi tidak ditemukan
+ *       500:
+ *         description: Terjadi kesalahan pada server
+ */
+router.put('/:id', (req, res) => {
+    const { id } = req.params;
+    const { user_id, rumah_yatim_id, amount, payment_method, status, transaction_id } = req.body;
+    const query = "UPDATE donation SET user_id=?, rumah_yatim_id=?, amount=?, payment_method=?, status=?, transaction_id=? WHERE id=?";
+    db.query(query, [user_id, rumah_yatim_id, amount, payment_method, status, transaction_id, id], (err, result) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else if (result.affectedRows === 0) {
+            res.status(404).json({ message: 'Donation not found' });
+        } else {
+            res.json({ message: 'Donation updated successfully' });
+        }
+    });
+});
+
+/**
+ * @swagger
+ * /donation/{id}:
+ *   delete:
+ *     summary: Menghapus data donasi berdasarkan ID
+ *     description: Menghapus data donasi berdasarkan ID
+ *     tags:
+ *       - Donasi
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Donasi berhasil dihapus
+ *       404:
+ *         description: Donasi tidak ditemukan
+ *       500:
+ *         description: Terjadi kesalahan pada server
+ */
+router.delete('/:id', (req, res) => {
+    const { id } = req.params;
+    db.query('DELETE FROM donation WHERE id = ?', [id], (err, result) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else if (result.affectedRows === 0) {
+            res.status(404).json({ message: 'Donation not found' });
+        } else {
+            res.json({ message: 'Donation deleted successfully' });
+        }
+    });
+});
+
+/**
+ * @swagger
+ * /donation/impact-analysis/{orphanageId}:
+ *   get:
+ *     summary: Mendapatkan analisis dampak donasi terhadap panti asuhan
+ *     description: Menghasilkan berbagai metrik statistik tentang donasi yang diterima panti asuhan tertentu
+ *     tags:
+ *       - Donasi
  *     parameters:
  *       - in: path
  *         name: orphanageId
  *         required: true
  *         schema:
  *           type: integer
- *         description: Orphanage ID
+ *         description: ID panti asuhan yang ingin dianalisis
  *     responses:
- *       200:
- *         description: List of orphanage's donations retrieved successfully
+ *       '200':
+ *         description: Data analisis dampak donasi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   description: ID panti asuhan
+ *                 nama_panti:
+ *                   type: string
+ *                   description: Nama panti asuhan
+ *                 jumlah_anak:
+ *                   type: integer
+ *                   description: Jumlah anak di panti
+ *                 total_donations:
+ *                   type: integer
+ *                   description: Total jumlah donasi yang diterima
+ *                 total_donated:
+ *                   type: number
+ *                   format: double
+ *                   description: Total nominal uang yang didonasikan
+ *                 unique_donors:
+ *                   type: integer
+ *                   description: Jumlah donor unik
+ *                 average_donation:
+ *                   type: number
+ *                   format: double
+ *                   description: Rata-rata nominal donasi
+ *                 first_donation_date:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Tanggal donasi pertama kali diterima
+ *                 last_donation_date:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Tanggal donasi terakhir diterima
+ *                 donation_period_days:
+ *                   type: integer
+ *                   description: Rentang hari antara donasi pertama dan terakhir
+ *                 donation_per_child:
+ *                   type: number
+ *                   format: double
+ *                   description: Rata-rata donasi per anak
+ *                 donations_last_30_days:
+ *                   type: integer
+ *                   description: Jumlah donasi dalam 30 hari terakhir
+ *                 amount_last_30_days:
+ *                   type: number
+ *                   format: double
+ *                   description: Total nominal donasi dalam 30 hari terakhir
+ *       '404':
+ *         description: Panti asuhan tidak ditemukan
+ *       '500':
+ *         description: Kesalahan server
+ */
+// 14 Efek donasi terhadap panti
+router.get('/impact-analysis/:orphanageId', (req, res) => {
+    const query = `
+        SELECT 
+            ry.id,
+            ry.nama_panti,
+            ry.jumlah_anak,
+            COUNT(DISTINCT d.id) as total_donations,
+            SUM(d.amount) as total_donated,
+            COUNT(DISTINCT d.user_id) as unique_donors,
+            AVG(d.amount) as average_donation,
+            MIN(d.created_at) as first_donation_date,
+            MAX(d.created_at) as last_donation_date,
+            DATEDIFF(MAX(d.created_at), MIN(d.created_at)) as donation_period_days,
+            SUM(d.amount) / ry.jumlah_anak as donation_per_child,
+            COUNT(DISTINCT CASE WHEN d.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN d.id END) as donations_last_30_days,
+            SUM(CASE WHEN d.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN d.amount ELSE 0 END) as amount_last_30_days
+        FROM rumah_yatim ry
+        LEFT JOIN donation d ON ry.id = d.rumah_yatim_id
+        WHERE ry.id = ?
+        GROUP BY ry.id, ry.nama_panti, ry.jumlah_anak
+    `;
+    
+    db.query(query, [req.params.orphanageId], (err, results) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else if (results.length === 0) {
+            res.status(404).json({ message: 'Orphanage not found' });
+        } else {
+            res.json(results[0]);
+        }
+    });
+});
+
+/**
+ * @swagger
+ * /donation/timeline/{orphanageId}:
+ *   get:
+ *     summary: Mendapatkan timeline donasi per bulan untuk panti asuhan
+ *     description: Menampilkan data donasi yang dikelompokkan per bulan beserta berbagai metriknya
+ *     tags:
+ *       - Donasi
+ *     parameters:
+ *       - in: path
+ *         name: orphanageId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID panti asuhan yang ingin dilihat timeline donasinya
+ *     responses:
+ *       '200':
+ *         description: Data timeline donasi per bulan
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Donation'
- *       404:
- *         description: No donations found for orphanage
- *       500:
- *         description: Server error
+ *                 type: object
+ *                 properties:
+ *                   month:
+ *                     type: integer
+ *                     description: Bulan (1-12)
+ *                   year:
+ *                     type: integer
+ *                     description: Tahun
+ *                   donation_count:
+ *                     type: integer
+ *                     description: Jumlah donasi pada bulan tersebut
+ *                   total_amount:
+ *                     type: number
+ *                     format: double
+ *                     description: Total nominal donasi pada bulan tersebut
+ *                   average_amount:
+ *                     type: number
+ *                     format: double
+ *                     description: Rata-rata nominal donasi pada bulan tersebut
+ *                   unique_donors:
+ *                     type: integer
+ *                     description: Jumlah donor unik pada bulan tersebut
+ *                   payment_methods:
+ *                     type: string
+ *                     description: Metode pembayaran yang digunakan (dipisahkan koma)
+ *       '404':
+ *         description: Tidak ada data donasi untuk panti asuhan ini
+ *       '500':
+ *         description: Kesalahan server
  */
-
-/**
- * @swagger
- * /donation/{id}:
- *   delete:
- *     summary: Delete a donation
- *     tags: [Donations]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Donation ID
- *     responses:
- *       200:
- *         description: Donation deleted successfully
- *       404:
- *         description: Donation not found
- *       500:
- *         description: Server error
- */
-
-// Get all donations
-router.get('/', async (req, res) => {
-  try {
-    const [rows] = await db.query('SELECT * FROM donation');
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Create new donation
-router.post('/', async (req, res) => {
-  const {
-    user_id,
-    rumah_yatim_id,
-    amount,
-    payment_method,
-    status,
-    transaction_id
-  } = req.body;
-
-  try {
-    const [result] = await db.execute(
-      'INSERT INTO donation (user_id, rumah_yatim_id, amount, payment_method, status, transaction_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [user_id, rumah_yatim_id, amount, payment_method, status, transaction_id]
-    );
-    res.status(201).json({ 
-      message: 'Donation created successfully',
-      id: result.insertId
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get donation by ID
-router.get('/:id', async (req, res) => {
-  try {
-    const [rows] = await db.query('SELECT * FROM donation WHERE id = ?', [req.params.id]);
-    if (rows.length === 0) {
-      res.status(404).json({ message: 'Donation not found' });
-    } else {
-      res.json(rows[0]);
-    }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Update donation status
-router.put('/:id', async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-
-  try {
-    const [result] = await db.execute(
-      'UPDATE donation SET status = ? WHERE id = ?',
-      [status, id]
-    );
-
-    if (result.affectedRows === 0) {
-      res.status(404).json({ message: 'Donation not found' });
-    } else {
-      res.json({ message: 'Donation status updated successfully' });
-    }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get donations by user ID
-router.get('/user/:userId', async (req, res) => {
-  const userId = req.params.userId;
-  try {
-    const [rows] = await db.query(
-      `SELECT d.*, u.name, u.email, ry.nama_panti 
-       FROM donation d 
-       JOIN users u ON d.user_id = u.id 
-       JOIN rumah_yatim ry ON d.rumah_yatim_id = ry.id 
-       WHERE d.user_id = ?`,
-      [userId]
-    );
-    if (rows.length === 0) {
-      res.status(404).json({ message: 'No donations found for user' });
-    } else {
-      res.json(rows);
-    }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get donations by orphanage ID
-router.get('/orphanage/:orphanageId', async (req, res) => {
-  const orphanageId = req.params.orphanageId;
-  try {
-    const [rows] = await db.query('SELECT * FROM donation WHERE rumah_yatim_id = ?', [orphanageId]);
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'No donations found for orphanage' });
-    }
-    res.json(rows);
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// 13 Donasi berdasarkan metode pembayaran
-router.get('/payment-trends', async (req, res) => {
-    try {
-        const query = `
-            SELECT 
-                payment_method,
-                COUNT(*) as total_transactions,
-                SUM(amount) as total_amount,
-                AVG(amount) as average_amount,
-                DATE_FORMAT(created_at, '%Y-%m') as month
-            FROM donation
-            GROUP BY payment_method, DATE_FORMAT(created_at, '%Y-%m')
-            ORDER BY month DESC, total_amount DESC
-        `;
-        
-        const [results] = await db.query(query);
-        res.json(results);
-    } catch (err) {
-        console.error('Database error:', err);
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// 3 donasi + nama email
-router.get('/users/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        const query = `
-            SELECT d.*, u.name, u.email 
-            FROM donation d
-            JOIN users u ON d.user_id = u.id
-            WHERE d.user_id = ?
-        `;
-        const [results] = await db.query(query, [id]);
-        if (results.length === 0) {
-            res.status(404).json({ message: 'Donation not found' });
-        } else {
-            res.json(results);
-        }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Delete donation
-router.delete('/:id', async (req, res) => {
-  try {
-    const [result] = await db.execute('DELETE FROM donation WHERE id = ?', [req.params.id]);
-    if (result.affectedRows === 0) {
-      res.status(404).json({ message: 'Donation not found' });
-    } else {
-      res.json({ message: 'Donation deleted successfully' });
-    }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// 14 Efek donasi terhadap panti
-router.get('/impact-analysis/:orphanageId', async (req, res) => {
-    try {
-        const query = `
-            SELECT 
-                ry.id,
-                ry.nama_panti,
-                ry.jumlah_anak,
-                COUNT(DISTINCT d.id) as total_donations,
-                SUM(d.amount) as total_donated,
-                COUNT(DISTINCT d.user_id) as unique_donors,
-                AVG(d.amount) as average_donation,
-                MIN(d.created_at) as first_donation_date,
-                MAX(d.created_at) as last_donation_date,
-                DATEDIFF(MAX(d.created_at), MIN(d.created_at)) as donation_period_days,
-                SUM(d.amount) / ry.jumlah_anak as donation_per_child,
-                COUNT(DISTINCT CASE WHEN d.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN d.id END) as donations_last_30_days,
-                SUM(CASE WHEN d.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN d.amount ELSE 0 END) as amount_last_30_days
-            FROM rumah_yatim ry
-            LEFT JOIN donation d ON ry.id = d.rumah_yatim_id
-            WHERE ry.id = ?
-            GROUP BY ry.id, ry.nama_panti, ry.jumlah_anak
-        `;
-        
-        const [results] = await db.query(query, [req.params.orphanageId]);
-        if (results.length === 0) {
-            res.status(404).json({ message: 'Orphanage not found' });
-        } else {
-            res.json(results[0]);
-        }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
 // 15 Timeline donasi panti
-router.get('/timeline/:orphanageId', async (req, res) => {
+router.get('/timeline/:orphanageId', (req, res) => {
     const { orphanageId } = req.params;
-    try {
-        const query = `
-            SELECT 
-                MONTH(d.created_at) as month,
-                YEAR(d.created_at) as year,
-                COUNT(d.id) as donation_count,
-                SUM(d.amount) as total_amount,
-                AVG(d.amount) as average_amount,
-                COUNT(DISTINCT d.user_id) as unique_donors,
-                GROUP_CONCAT(DISTINCT d.payment_method) as payment_methods
-            FROM donation d
-            WHERE d.rumah_yatim_id = ?
-            GROUP BY YEAR(d.created_at), MONTH(d.created_at)
-            ORDER BY year DESC, month DESC
-        `;
-        
-        const [results] = await db.query(query, [orphanageId]);
-        if (results.length === 0) {
+    const query = `
+        SELECT 
+            MONTH(d.created_at) as month,
+            YEAR(d.created_at) as year,
+            COUNT(d.id) as donation_count,
+            SUM(d.amount) as total_amount,
+            AVG(d.amount) as average_amount,
+            COUNT(DISTINCT d.user_id) as unique_donors,
+            GROUP_CONCAT(DISTINCT d.payment_method) as payment_methods
+        FROM donation d
+        WHERE d.rumah_yatim_id = ?
+        GROUP BY YEAR(d.created_at), MONTH(d.created_at)
+        ORDER BY year DESC, month DESC
+    `;
+    
+    db.query(query, [orphanageId], (err, results) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else if (results.length === 0) {
             res.status(404).json({ message: 'No donation data found for this orphanage' });
         } else {
             res.json(results);
         }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    });
 });
 
 module.exports = router;

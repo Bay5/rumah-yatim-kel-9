@@ -5,41 +5,30 @@ const axios = require('axios');
 
 /**
  * @swagger
- * tags:
- *   name: Registration
- *   description: User registration endpoints
- */
-
-/**
- * @swagger
  * /register:
  *   post:
- *     summary: Register a new user
- *     tags: [Registration]
+ *     summary: Mendaftarkan user baru
+ *     tags: [register]
+ *     description: Menggunakan reCAPTCHA untuk verifikasi dan menambahkan user baru ke database
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - username
- *               - password
- *               - token
  *             properties:
  *               username:
  *                 type: string
- *                 description: Desired username
+ *                 description: Username user yang akan didaftarkan
  *               password:
  *                 type: string
- *                 format: password
- *                 description: User's password
+ *                 description: Password user yang akan didaftarkan
  *               token:
  *                 type: string
- *                 description: reCAPTCHA token
+ *                 description: Token reCAPTCHA yang dikirimkan dari frontend
  *     responses:
  *       201:
- *         description: User registered successfully
+ *         description: User berhasil didaftarkan
  *         content:
  *           application/json:
  *             schema:
@@ -47,21 +36,41 @@ const axios = require('axios');
  *               properties:
  *                 message:
  *                   type: string
- *                   example: User registered successfully
+ *                   example: User berhasil didaftarkan
  *                 user:
  *                   type: object
  *                   properties:
  *                     id:
  *                       type: integer
- *                       description: Generated user ID
+ *                       example: 1001
  *                     username:
  *                       type: string
- *                       description: Registered username
+ *                       example: johndoe
  *       403:
- *         description: CAPTCHA verification failed
+ *         description: Verifikasi captcha gagal
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Verifikasi captcha gagal
  *       500:
- *         description: Server error
+ *         description: Terjadi kesalahan pada server saat memproses registrasi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Terjadi kesalahan pada server saat memproses registrasi
+ *                 error:
+ *                   type: string
+ *                   example: "Internal Server Error"
  */
+
 
 router.post('/', async (req, res) => {
   let { username, password, token } = req.body;
@@ -72,7 +81,7 @@ router.post('/', async (req, res) => {
       null,
       {
         params: {
-          secret: process.env.RECAPTCHA_SECRET_KEY,
+          secret: '6LeHdBwrAAAAALQjRXZFQC6S16iyOJ4NaIIY4ZZr', 
           response: token
         }
       }
@@ -80,7 +89,7 @@ router.post('/', async (req, res) => {
 
     const { success } = captchaResponse.data;
     if (!success) {
-      return res.status(403).json({ message: 'CAPTCHA verification failed' });
+      return res.status(403).json({ message: 'Verifikasi captcha gagal' });
     }
 
     let newId = 1001;
@@ -101,7 +110,7 @@ router.post('/', async (req, res) => {
     );
 
     res.status(201).json({
-      message: 'User registered successfully',
+      message: 'User berhasil didaftarkan',
       user: {
         id: newId,
         username
@@ -109,9 +118,9 @@ router.post('/', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error during registration:', error);
+    console.error('Error saat registrasi user:', error);
     res.status(500).json({
-      message: 'Server error during registration',
+      message: 'Terjadi kesalahan pada server saat memproses registrasi',
       error: error.message
     });
   }
