@@ -1,15 +1,16 @@
 {
-  "name": "prog-1",
+  "name": "rumah-yatim-api",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "API for Rumah Yatim Management System",
+  "main": "app.js",
   "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "axios": "^1.8.4",
     "body-parser": "^1.20.3",
@@ -17,6 +18,11 @@
     "express-rate-limit": "^7.5.0",
     "moment-timezone": "^0.5.47",
     "mysql2": "^3.13.0",
-    "redis": "^4.7.0"
+    "redis": "^4.7.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   }
 }

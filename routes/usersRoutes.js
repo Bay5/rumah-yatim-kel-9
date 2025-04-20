@@ -2,71 +2,228 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
-router.post('/', (req, res) => {
+/**
+ * @swagger
+ * tags:
+ *   name: Users
+ *   description: User management endpoints
+ */
+
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     summary: Get all users
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of users retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ *   post:
+ *     summary: Create a new user
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User created successfully
+ *       400:
+ *         description: Username already exists
+ *       500:
+ *         description: Server error
+ */
+
+router.post('/', async (req, res) => {
     const { id, username, name, email, password } = req.body;
-    const query = 'INSERT INTO users (id, username, name, email, password) VALUES (?, ?, ?, ?, ?)';
-    db.query(query, [id, username, name, email, password], (err, result) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.status(201).json({ message: 'User added successfully', id: result.insertId });
-        }
-    });
+    try {
+        const [result] = await db.execute(
+            'INSERT INTO users (id, username, name, email, password) VALUES (?, ?, ?, ?, ?)',
+            [id, username, name, email, password]
+        );
+        res.status(201).json({ message: 'User added successfully', id: result.insertId });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-router.get('/', (req, res) => {
-    db.query('SELECT * FROM users', (err, result) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(result)
-        }
-    });
+/**
+ * @swagger
+ * /users/{id}:
+ *   get:
+ *     summary: Get user by ID
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ *   put:
+ *     summary: Update a user
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ *   delete:
+ *     summary: Delete a user
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+
+router.get('/', async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM users');
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
     const { id } = req.params;
-    db.query('SELECT * FROM users WHERE id=?', [id], (err, result) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else if (result.length === 0) {
+    try {
+        const [rows] = await db.query('SELECT * FROM users WHERE id=?', [id]);
+        if (rows.length === 0) {
             res.status(404).json({ message: 'User not found' });
         } else {
-            res.json(result)
+            res.json(rows[0]);
         }
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { username, name, email, password } = req.body;
-    const query = "UPDATE users SET username=?, name=?, email=?, password=? WHERE id=?";
-    db.query(query, [username, name, email, password, id], (err, result) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else if (result.affectedRows === 0) {
+    try {
+        const [result] = await db.execute(
+            "UPDATE users SET username=?, name=?, email=?, password=? WHERE id=?",
+            [username, name, email, password, id]
+        );
+        if (result.affectedRows === 0) {
             res.status(404).json({ message: 'User not found' });
         } else {
             res.json({ message: 'User updated successfully' });
         }
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
     const { id } = req.params;
-    db.query('DELETE FROM users WHERE id = ?', [id], (err, result) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else if (result.affectedRows === 0) {
+    try {
+        const [result] = await db.execute('DELETE FROM users WHERE id = ?', [id]);
+        if (result.affectedRows === 0) {
             res.status(404).json({ message: 'User not found' });
         } else {
             res.json({ message: 'User deleted successfully' });
         }
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
+/**
+ * @swagger
+ * /users/profile:
+ *   get:
+ *     summary: Get current user's profile
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+
 // 4. profile user dengan ringkasan donasi
-router.get('/profile/:userId', (req, res) => {
+router.get('/profile/:userId', async (req, res) => {
     const query = `
         SELECT 
             u.*,
@@ -79,19 +236,20 @@ router.get('/profile/:userId', (req, res) => {
         GROUP BY u.id
     `;
     
-    db.query(query, [req.params.userId], (err, results) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else if (results.length === 0) {
+    try {
+        const [results] = await db.query(query, [req.params.userId]);
+        if (results.length === 0) {
             res.status(404).json({ message: 'User not found' });
         } else {
             res.json(results[0]);
         }
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // 6 Donasi user bulanan
-router.get('/monthly-donations/:userId', (req, res) => {
+router.get('/monthly-donations/:userId', async (req, res) => {
     const query = `
         SELECT 
             DATE_FORMAT(d.created_at, '%Y-%m') as month,
@@ -104,17 +262,16 @@ router.get('/monthly-donations/:userId', (req, res) => {
         ORDER BY month DESC
     `;
     
-    db.query(query, [req.params.userId], (err, results) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(results);
-        }
-    });
+    try {
+        const [results] = await db.query(query, [req.params.userId]);
+        res.json(results);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // 9 ringkasan aktivitas user
-router.get('/activity/:userId', (req, res) => {
+router.get('/activity/:userId', async (req, res) => {
     const query = `
         SELECT 
             u.id,
@@ -132,19 +289,20 @@ router.get('/activity/:userId', (req, res) => {
         GROUP BY u.id, u.name, u.email
     `;
     
-    db.query(query, [req.params.userId], (err, results) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else if (results.length === 0) {
+    try {
+        const [results] = await db.query(query, [req.params.userId]);
+        if (results.length === 0) {
             res.status(404).json({ message: 'User not found' });
         } else {
             res.json(results[0]);
         }
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // 10 user engagement
-router.get('/engagement/:userId', (req, res) => {
+router.get('/engagement/:userId', async (req, res) => {
     const query = `
         SELECT 
             u.id,
@@ -164,15 +322,16 @@ router.get('/engagement/:userId', (req, res) => {
         GROUP BY u.id, u.name
     `;
     
-    db.query(query, [req.params.userId], (err, results) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else if (results.length === 0) {
+    try {
+        const [results] = await db.query(query, [req.params.userId]);
+        if (results.length === 0) {
             res.status(404).json({ message: 'User not found' });
         } else {
             res.json(results[0]);
         }
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 module.exports = router;

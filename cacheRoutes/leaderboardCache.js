@@ -3,7 +3,84 @@ const router = express.Router();
 const redis = require('redis');
 const db = require('../config/db');
 
-// Buat Redis client
+/**
+ * @swagger
+ * tags:
+ *   name: Cache - Leaderboard
+ *   description: Leaderboard caching endpoints
+ */
+
+/**
+ * @swagger
+ * /cache/leaderboard:
+ *   get:
+ *     summary: Get cached leaderboard data
+ *     tags: [Cache - Leaderboard]
+ *     responses:
+ *       200:
+ *         description: Leaderboard data retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 source:
+ *                   type: string
+ *                   enum: [cache, database]
+ *                   description: Data source (cache or database)
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       user_id:
+ *                         type: integer
+ *                         description: User ID
+ *                       username:
+ *                         type: string
+ *                         description: Username
+ *                       total_donations:
+ *                         type: number
+ *                         description: Total amount donated
+ *                       donation_count:
+ *                         type: integer
+ *                         description: Number of donations made
+ *       404:
+ *         description: No leaderboard data found
+ *       500:
+ *         description: Server error
+ *   post:
+ *     summary: Update leaderboard cache
+ *     tags: [Cache - Leaderboard]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 user_id:
+ *                   type: integer
+ *                   description: User ID
+ *                 username:
+ *                   type: string
+ *                   description: Username
+ *                 total_donations:
+ *                   type: number
+ *                   description: Total amount donated
+ *                 donation_count:
+ *                   type: integer
+ *                   description: Number of donations made
+ *     responses:
+ *       200:
+ *         description: Leaderboard cache updated successfully
+ *       500:
+ *         description: Server error
+ */
+
+// Redis client setup
 const redisClient = redis.createClient({
     url: 'redis://localhost:6379'
 });
@@ -17,53 +94,54 @@ const redisClient = redis.createClient({
 redisClient.on('error', (err) => console.log('Redis Client Error', err));
 redisClient.on('connect', () => console.log('Connected to Redis'));
 
-// Cache keys dan duration
-const CACHE_KEY = 'donatur:leaderboard';
-const CACHE_DURATION = 3600; // 1 jam
+// Cache key dan duration
+const CACHE_KEY = 'leaderboard';
+const CACHE_DURATION = 300; // 5 menit
 
-// Get Leaderboard Donatur with Cache
+// Function untuk mengambil data leaderboard dari database
+async function getLeaderboardFromDatabase() {
+    try {
+        const query = `
+            SELECT 
+                u.id as user_id,
+                u.username,
+                COUNT(d.id) as donation_count,
+                SUM(d.amount) as total_donations
+            FROM users u
+            INNER JOIN donation d ON u.id = d.user_id
+            WHERE d.status = 'Completed'
+            GROUP BY u.id, u.username
+            ORDER BY total_donations DESC
+        `;
+        console.log('Executing query:', query);
+        const [rows] = await db.query(query);
+        console.log('Query results:', rows);
+        return rows || [];
+    } catch (error) {
+        console.error('Database error:', error);
+        throw error;
+    }
+}
+
+// Route untuk mendapatkan leaderboard
 router.get('/', async (req, res) => {
     try {
-        // Check cache first
-        const cachedData = await redisClient.get(CACHE_KEY);
-        if (cachedData) {
-            console.log('Cache hit - returning cached leaderboard');
-            return res.json({
-                status: 'success',
-                data: JSON.parse(cachedData)
-            });
+        // Hapus cache terlebih dahulu untuk testing
+        await redisClient.del(CACHE_KEY);
+        console.log('Cache cleared');
+
+        const leaderboardData = await getLeaderboardFromDatabase();
+        console.log('Leaderboard data:', leaderboardData);
+
+        if (!leaderboardData || leaderboardData.length === 0) {
+            return res.status(404).json({ error: 'No leaderboard data found' });
         }
 
-        console.log('Cache miss - querying database for leaderboard');
-        const [results] = await db.query(`
-            SELECT 
-                u.id,
-                u.name,
-                u.email,
-                COALESCE(SUM(d.amount), 0) as total_donasi,
-                COUNT(d.id) as jumlah_donasi
-            FROM users u
-            LEFT JOIN donation d ON u.id = d.user_id
-            GROUP BY u.id, u.name, u.email
-            ORDER BY total_donasi DESC
-        `);
-
-        const leaderboard = results.map((item, index) => ({
-            rank: index + 1,
-            user_id: item.id,
-            name: item.name,
-            email: item.email,
-            total_donation: parseInt(item.total_donasi),
-            total_transactions: parseInt(item.jumlah_donasi)
-        }));
-
-        // Save to cache
-        await redisClient.setEx(CACHE_KEY, CACHE_DURATION, JSON.stringify(leaderboard));
-        console.log('Leaderboard cached successfully');
+        await redisClient.setEx(CACHE_KEY, CACHE_DURATION, JSON.stringify(leaderboardData));
 
         res.json({
-            status: 'success',
-            data: leaderboard
+            source: 'database',
+            data: leaderboardData
         });
     } catch (error) {
         console.error('Server Error:', error);
@@ -75,47 +153,21 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Force refresh leaderboard cache
-router.post('/refresh', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
-        const [results] = await db.query(`
-            SELECT 
-                u.id,
-                u.name,
-                u.email,
-                COALESCE(SUM(d.amount), 0) as total_donasi,
-                COUNT(d.id) as jumlah_donasi
-            FROM users u
-            LEFT JOIN donation d ON u.id = d.user_id
-            GROUP BY u.id, u.name, u.email
-            ORDER BY total_donasi DESC
-        `);
-
-        const leaderboard = results.map((item, index) => ({
-            rank: index + 1,
-            user_id: item.id,
-            name: item.name,
-            email: item.email,
-            total_donation: parseInt(item.total_donasi),
-            total_transactions: parseInt(item.jumlah_donasi)
-        }));
-
-        // Save to cache
-        await redisClient.setEx(CACHE_KEY, CACHE_DURATION, JSON.stringify(leaderboard));
-        
-        res.json({
-            status: 'success',
-            message: 'Leaderboard cache refreshed successfully',
-            data: leaderboard
-        });
+        const leaderboardData = req.body;
+        await redisClient.setEx(CACHE_KEY, CACHE_DURATION, JSON.stringify(leaderboardData));
+        res.json({ message: 'Leaderboard cache updated successfully' });
     } catch (error) {
         console.error('Server Error:', error);
         res.status(500).json({
             status: 'error',
-            message: 'Failed to refresh leaderboard cache',
+            message: 'Failed to update leaderboard cache',
             error: error.message
         });
     }
 });
+
+// Hapus semua route lainnya
 
 module.exports = router;

@@ -2,77 +2,190 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
-router.post('/', (req, res) => {
-    const { nama_doa, isi_doa, latin, arti } = req.body;
-    const query = 'INSERT INTO doa (nama_doa, isi_doa, latin, arti) VALUES (?, ?, ?, ?)';
-    db.query(query, [nama_doa, isi_doa, latin, arti], (err, result) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.status(201).json({ message: 'Doa berhasil ditambahkan', id: result.insertId });
-        }
-    });
-});
+/**
+ * @swagger
+ * tags:
+ *   name: Prayers
+ *   description: Prayer management endpoints
+ */
 
-router.get('/', (req, res) => {
-    db.query('SELECT * FROM doa', (err, result) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(result);
-        }
-    });
-});
+/**
+ * @swagger
+ * /doa:
+ *   get:
+ *     summary: Get all prayers
+ *     tags: [Prayers]
+ *     responses:
+ *       200:
+ *         description: List of prayers retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Doa'
+ *       500:
+ *         description: Server error
+ */
 
-router.get('/:id', (req, res) => {
-    const { id } = req.params;
-    db.query('SELECT * FROM doa WHERE id_doa = ?', [id], (err, result) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else if (result.length === 0) {
-            res.status(404).json({ message: 'Doa tidak ditemukan' });
-        } else {
-            res.json(result[0]);
-        }
-    });
-});
-
-router.put('/:id', (req, res) => {
-    const { id } = req.params;
-    const fields = req.body;
-
-    const keys = Object.keys(fields);
-    const values = Object.values(fields);
-
-    if (keys.length === 0) {
-        return res.status(400).json({ message: "Tidak ada data untuk diperbarui" });
+router.get('/', async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM doa');
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-
-    const query = `UPDATE doa SET ${keys.map(k => `${k} = ?`).join(', ')} WHERE id_doa = ?`;
-
-    db.query(query, [...values, id], (err, result) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Doa tidak ditemukan' });
-        }
-        res.json({ message: 'Doa berhasil diperbarui' });
-    });
 });
 
+/**
+ * @swagger
+ * /doa/{id}:
+ *   get:
+ *     summary: Get prayer by ID
+ *     tags: [Prayers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Prayer ID
+ *     responses:
+ *       200:
+ *         description: Prayer details retrieved successfully
+ *       404:
+ *         description: Prayer not found
+ *       500:
+ *         description: Server error
+ */
 
-router.delete('/:id', (req, res) => {
-    const { id } = req.params;
-    db.query('DELETE FROM doa WHERE id_doa = ?', [id], (err, result) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else if (result.affectedRows === 0) {
-            res.status(404).json({ message: 'Doa tidak ditemukan' });
+router.get('/:id', async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM doa WHERE id_doa = ?', [req.params.id]);
+        if (rows.length === 0) {
+            res.status(404).json({ message: 'Prayer not found' });
         } else {
-            res.json({ message: 'Doa berhasil dihapus' });
+            res.json(rows[0]);
         }
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+/**
+ * @swagger
+ * /doa:
+ *   post:
+ *     summary: Create a new prayer
+ *     tags: [Prayers]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Doa'
+ *     responses:
+ *       201:
+ *         description: Prayer created successfully
+ *       500:
+ *         description: Server error
+ */
+
+router.post('/', async (req, res) => {
+    const { nama_doa, isi_doa, latin, arti } = req.body;
+    try {
+        const [result] = await db.execute(
+            'INSERT INTO doa (nama_doa, isi_doa, latin, arti) VALUES (?, ?, ?, ?)',
+            [nama_doa, isi_doa, latin, arti]
+        );
+        res.status(201).json({ 
+            message: 'Prayer created successfully',
+            id: result.insertId
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+/**
+ * @swagger
+ * /doa/{id}:
+ *   put:
+ *     summary: Update a prayer
+ *     tags: [Prayers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Prayer ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Doa'
+ *     responses:
+ *       200:
+ *         description: Prayer updated successfully
+ *       404:
+ *         description: Prayer not found
+ *       500:
+ *         description: Server error
+ */
+
+router.put('/:id', async (req, res) => {
+    const { id } = req.params;
+    const { nama_doa, isi_doa, latin, arti } = req.body;
+    try {
+        const [result] = await db.execute(
+            'UPDATE doa SET nama_doa = ?, isi_doa = ?, latin = ?, arti = ? WHERE id_doa = ?',
+            [nama_doa, isi_doa, latin, arti, id]
+        );
+        if (result.affectedRows === 0) {
+            res.status(404).json({ message: 'Prayer not found' });
+        } else {
+            res.json({ message: 'Prayer updated successfully' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+/**
+ * @swagger
+ * /doa/{id}:
+ *   delete:
+ *     summary: Delete a prayer
+ *     tags: [Prayers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Prayer ID
+ *     responses:
+ *       200:
+ *         description: Prayer deleted successfully
+ *       404:
+ *         description: Prayer not found
+ *       500:
+ *         description: Server error
+ */
+
+router.delete('/:id', async (req, res) => {
+    try {
+        const [result] = await db.execute('DELETE FROM doa WHERE id_doa = ?', [req.params.id]);
+        if (result.affectedRows === 0) {
+            res.status(404).json({ message: 'Prayer not found' });
+        } else {
+            res.json({ message: 'Prayer deleted successfully' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 module.exports = router;
