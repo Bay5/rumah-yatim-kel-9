@@ -17,6 +17,8 @@
     "express-rate-limit": "^7.5.0",
     "moment-timezone": "^0.5.47",
     "mysql2": "^3.13.0",
-    "redis": "^4.7.0"
+    "redis": "^4.7.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   }
 }

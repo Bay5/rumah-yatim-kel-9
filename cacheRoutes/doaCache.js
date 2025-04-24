@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db');
+const db = require('../config/db promised');
 
 async function getDoaFromDatabase() {
   try {
@@ -12,6 +12,50 @@ async function getDoaFromDatabase() {
   }
 }
 
+/**
+ * @swagger
+ * /cache/doa:
+ *   get:
+ *     summary: Mendapatkan semua data doa
+ *     description: |
+ *       Mengambil seluruh data doa harian dengan mekanisme caching Redis.
+ *       Data akan tersimpan di cache selama 5 menit (300 detik).
+ *     tags: [Doa - Cache]
+ *     responses:
+ *       200:
+ *         description: Berhasil mendapatkan data doa
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DoaResponse'
+ *             examples:
+ *               fromCache:
+ *                 value:
+ *                   source: cache
+ *                   data:
+ *                     - id_doa: 1
+ *                       nama_doa: "Doa Sebelum Makan"
+ *                       isi_doa: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ"
+ *                       latin: "Bismillahirrahmanirrahim"
+ *                       arti: "Dengan nama Allah Yang Maha Pengasih Lagi Maha Penyayang"
+ *               fromDatabase:
+ *                 value:
+ *                   source: database
+ *                   data:
+ *                     - id_doa: 1
+ *                       nama_doa: "Doa Sebelum Makan"
+ *                       isi_doa: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ"
+ *                       latin: "Bismillahirrahmanirrahim"
+ *                       arti: "Dengan nama Allah Yang Maha Pengasih Lagi Maha Penyayang"
+ *       500:
+ *         description: Kesalahan server
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Terjadi kesalahan server"
+ */
 router.get('/', async (req, res) => {
   const redisClient = req.redisClient;
   try {
@@ -38,6 +82,56 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /cache/doa/{id}:
+ *   get:
+ *     summary: Mendapatkan detail doa berdasarkan ID
+ *     description: |
+ *       Mengambil data spesifik satu doa dengan sistem caching Redis.
+ *       Data akan di-cache selama 5 menit.
+ *     tags: [Doa - Cache]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID doa
+ *     responses:
+ *       200:
+ *         description: Berhasil mendapatkan data doa
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DoaResponse'
+ *             examples:
+ *               fromCache:
+ *                 value:
+ *                   source: cache
+ *                   data:
+ *                     id_doa: 1
+ *                     nama_doa: "Doa Sebelum Makan"
+ *                     isi_doa: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ"
+ *                     latin: "Bismillahirrahmanirrahim"
+ *                     arti: "Dengan nama Allah Yang Maha Pengasih Lagi Maha Penyayang"
+ *       404:
+ *         description: Data doa tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Doa tidak ditemukan"
+ *       500:
+ *         description: Kesalahan server
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Server error"
+ */
 router.get('/:id', async (req, res) => {
     const id = req.params.id;
     const redisClient = req.redisClient;

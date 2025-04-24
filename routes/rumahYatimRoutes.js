@@ -2,6 +2,226 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
+/**
+ * @swagger
+ * /rumah_yatim:
+ *   post:
+ *     summary: Tambahkan rumah yatim baru
+ *     tags: [rumah-yatim]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *               nama_panti:
+ *                 type: string
+ *               nama_kota:
+ *                 type: string
+ *               nama_pengurus:
+ *                 type: string
+ *               alamat:
+ *                 type: string
+ *               foto:
+ *                 type: string
+ *               deskripsi:
+ *                 type: string
+ *               jumlah_anak:
+ *                 type: integer
+ *               kapasitas:
+ *                 type: integer
+ *               kontak:
+ *                 type: string
+ *               latitude:
+ *                 type: number
+ *               longtitude:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: Rumah Yatim berhasil ditambahkan
+ */
+
+/**
+ * @swagger
+ * /rumah_yatim:
+ *   get:
+ *     summary: Ambil semua data rumah yatim
+ *     tags: [rumah-yatim]
+ *     responses:
+ *       200:
+ *         description: Berhasil mengambil data
+ */
+
+/**
+ * @swagger
+ * /rumah_yatim/popular:
+ *   get:
+ *     summary: Ambil daftar rumah yatim dengan jumlah bookmark terbanyak
+ *     tags: [rumah-yatim]
+ *     responses:
+ *       200:
+ *         description: Daftar rumah yatim terpopuler
+ */
+
+/**
+ * @swagger
+ * /rumah_yatim/locations-summary:
+ *   get:
+ *     summary: Ambil ringkasan jumlah rumah yatim dan donasi per kota
+ *     tags: [rumah-yatim]
+ *     responses:
+ *       200:
+ *         description: Ringkasan berhasil diambil
+ */
+
+/**
+ * @swagger
+ * /rumah_yatim/{id}:
+ *   get:
+ *     summary: Ambil data rumah yatim berdasarkan ID
+ *     tags: [rumah-yatim]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Data rumah yatim ditemukan
+ *       404:
+ *         description: Rumah yatim tidak ditemukan
+ */
+
+/**
+ * @swagger
+ * /rumah_yatim/{id}:
+ *   put:
+ *     summary: Perbarui data rumah yatim berdasarkan ID
+ *     tags: [rumah-yatim]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nama_panti:
+ *                 type: string
+ *               nama_kota:
+ *                 type: string
+ *               nama_pengurus:
+ *                 type: string
+ *               alamat:
+ *                 type: string
+ *               foto:
+ *                 type: string
+ *               deskripsi:
+ *                 type: string
+ *               jumlah_anak:
+ *                 type: integer
+ *               kapasitas:
+ *                 type: integer
+ *               kontak:
+ *                 type: string
+ *               latitude:
+ *                 type: number
+ *               longtitude:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Berhasil diperbarui
+ *       404:
+ *         description: Rumah yatim tidak ditemukan
+ */
+
+/**
+ * @swagger
+ * /rumah_yatim/{id}:
+ *   delete:
+ *     summary: Hapus rumah yatim berdasarkan ID
+ *     tags: [rumah-yatim]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Berhasil dihapus
+ *       404:
+ *         description: Rumah yatim tidak ditemukan
+ */
+
+/**
+ * @swagger
+ * /rumah_yatim/donation/{orphanageId}:
+ *   get:
+ *     summary: Ambil donasi terbaru untuk rumah yatim tertentu
+ *     tags: [rumah-yatim]
+ *     parameters:
+ *       - in: path
+ *         name: orphanageId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Donasi terbaru berhasil diambil
+ *       404:
+ *         description: Rumah yatim tidak ditemukan
+ */
+
+/**
+ * @swagger
+ * /rumah_yatim/performance/{id}:
+ *   get:
+ *     summary: Ambil performa rumah yatim berdasarkan ID
+ *     tags: [rumah-yatim]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Performa ditemukan
+ *       404:
+ *         description: Rumah yatim tidak ditemukan
+ */
+
+/**
+ * @swagger
+ * /rumah_yatim/performance/{city}:
+ *   get:
+ *     summary: Ambil performa rumah yatim berdasarkan kota
+ *     tags: [rumah-yatim]
+ *     parameters:
+ *       - in: path
+ *         name: city
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Nama kota, gunakan tanda hubung untuk spasi
+ *     responses:
+ *       200:
+ *         description: Performa berdasarkan kota ditemukan
+ *       404:
+ *         description: Tidak ditemukan rumah yatim di kota ini
+ */
+
+
 router.post('/', (req, res) => {
     const { id, nama_panti, nama_kota, nama_pengurus, alamat, foto, deskripsi, jumlah_anak, kapasitas, kontak, latitude, longtitude } = req.body;
     const query = 'INSERT INTO rumah_yatim (id, nama_panti, nama_kota, nama_pengurus, alamat, foto, deskripsi, jumlah_anak, kapasitas, kontak, latitude, longtitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';

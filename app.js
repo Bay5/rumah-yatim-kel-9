@@ -22,6 +22,9 @@ const cacheLeaderboardRoutes = require('./cacheRoutes/leaderboardCache');
 const app = express();
 const port = 3000;
 
+const { swaggerUi, specs } = require('./swagger');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+
 const redisClient = redis.createClient({
     url: 'redis://localhost:6379',
     socket: {

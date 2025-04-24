@@ -14,6 +14,51 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Endpoint untuk login user
+ *     description: |
+ *       Endpoint untuk proses autentikasi user.
+ *       Dilengkapi dengan rate limiting (5 percobaan gagal dalam 15 menit).
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LoginInput'
+ *     responses:
+ *       200:
+ *         description: Login berhasil
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginSuccess'
+ *       401:
+ *         description: Autentikasi gagal
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *               example:
+ *                 message: Username atau password salah
+ *       429:
+ *         description: Terlalu banyak request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RateLimitError'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *               example:
+ *                 message: Server error
+ */
 router.post('/', apiLimiter, (req, res) => {
     const { username, password } = req.body;
     db.query(

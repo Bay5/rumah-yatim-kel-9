@@ -2,6 +2,41 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
+/**
+ * @swagger
+ * /users:
+ *   post:
+ *     summary: Menambahkan user baru
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - id
+ *               - username
+ *               - name
+ *               - email
+ *               - password
+ *             properties:
+ *               id:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User berhasil ditambahkan
+ */
+
+
 router.post('/', (req, res) => {
     const { id, username, name, email, password } = req.body;
     const query = 'INSERT INTO users (id, username, name, email, password) VALUES (?, ?, ?, ?, ?)';
@@ -14,6 +49,17 @@ router.post('/', (req, res) => {
     });
 });
 
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     summary: Mendapatkan semua user
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: Daftar user berhasil diambil
+ */
+
 router.get('/', (req, res) => {
     db.query('SELECT * FROM users', (err, result) => {
         if (err) {
@@ -23,6 +69,25 @@ router.get('/', (req, res) => {
         }
     });
 });
+
+/**
+ * @swagger
+ * /users/{id}:
+ *   get:
+ *     summary: Mendapatkan user berdasarkan ID
+ *     tags: [Users]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Data user ditemukan
+ *       404:
+ *         description: User tidak ditemukan
+ */
 
 router.get('/:id', (req, res) => {
     const { id } = req.params;
@@ -36,6 +101,40 @@ router.get('/:id', (req, res) => {
         }
     });
 });
+
+/**
+ * @swagger
+ * /users/{id}:
+ *   put:
+ *     summary: Mengupdate data user berdasarkan ID
+ *     tags: [Users]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Data user berhasil diperbarui
+ *       404:
+ *         description: User tidak ditemukan
+ */
 
 router.put('/:id', (req, res) => {
     const { id } = req.params;
@@ -52,6 +151,25 @@ router.put('/:id', (req, res) => {
     });
 });
 
+/**
+ * @swagger
+ * /users/{id}:
+ *   delete:
+ *     summary: Menghapus user berdasarkan ID
+ *     tags: [Users]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User berhasil dihapus
+ *       404:
+ *         description: User tidak ditemukan
+ */
+
 router.delete('/:id', (req, res) => {
     const { id } = req.params;
     db.query('DELETE FROM users WHERE id = ?', [id], (err, result) => {
@@ -64,6 +182,25 @@ router.delete('/:id', (req, res) => {
         }
     });
 });
+
+/**
+ * @swagger
+ * /users/profile/{userId}:
+ *   get:
+ *     summary: Mendapatkan profil user lengkap dengan ringkasan donasi
+ *     tags: [Users]
+ *     parameters:
+ *       - name: userId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Profil user berhasil diambil
+ *       404:
+ *         description: User tidak ditemukan
+ */
 
 // 4. profile user dengan ringkasan donasi
 router.get('/profile/:userId', (req, res) => {
@@ -90,6 +227,23 @@ router.get('/profile/:userId', (req, res) => {
     });
 });
 
+/**
+ * @swagger
+ * /users/monthly-donations/{userId}:
+ *   get:
+ *     summary: Mendapatkan data donasi bulanan user
+ *     tags: [Users]
+ *     parameters:
+ *       - name: userId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Data donasi bulanan berhasil diambil
+ */
+
 // 6 Donasi user bulanan
 router.get('/monthly-donations/:userId', (req, res) => {
     const query = `
@@ -112,6 +266,25 @@ router.get('/monthly-donations/:userId', (req, res) => {
         }
     });
 });
+
+/**
+ * @swagger
+ * /users/activity/{userId}:
+ *   get:
+ *     summary: Mendapatkan ringkasan aktivitas user
+ *     tags: [Users]
+ *     parameters:
+ *       - name: userId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Aktivitas user berhasil diambil
+ *       404:
+ *         description: User tidak ditemukan
+ */
 
 // 9 ringkasan aktivitas user
 router.get('/activity/:userId', (req, res) => {
@@ -142,6 +315,25 @@ router.get('/activity/:userId', (req, res) => {
         }
     });
 });
+
+/**
+ * @swagger
+ * /users/engagement/{userId}:
+ *   get:
+ *     summary: Mendapatkan statistik keterlibatan (engagement) user
+ *     tags: [Users]
+ *     parameters:
+ *       - name: userId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Statistik engagement user berhasil diambil
+ *       404:
+ *         description: User tidak ditemukan
+ */
 
 // 10 user engagement
 router.get('/engagement/:userId', (req, res) => {

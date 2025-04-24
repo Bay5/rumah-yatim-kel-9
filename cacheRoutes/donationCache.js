@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db');
+const db = require('../config/db promised');
 
 async function getDonationFromDatabase() {
   try {
@@ -12,6 +12,54 @@ async function getDonationFromDatabase() {
   }
 }
 
+/**
+ * @swagger
+ * /cache/donation:
+ *   get:
+ *     summary: Mendapatkan semua data donasi
+ *     description: |
+ *       Mengambil seluruh data transaksi donasi dengan mekanisme caching Redis.
+ *       Data akan tersimpan di cache selama 5 menit (300 detik).
+ *     tags: [Donasi - Cache]
+ *     responses:
+ *       200:
+ *         description: Berhasil mendapatkan data donasi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DonasiResponse'
+ *             examples:
+ *               fromCache:
+ *                 value:
+ *                   source: cache
+ *                   data:
+ *                     - id: 1
+ *                       user_id: 101
+ *                       rumah_yatim_id: 201
+ *                       amount: 500000
+ *                       payment_method: "bank_transfer"
+ *                       status: "completed"
+ *                       created_at: "2023-05-15T10:30:00Z"
+ *               fromDatabase:
+ *                 value:
+ *                   source: database
+ *                   data:
+ *                     - id: 1
+ *                       user_id: 101
+ *                       rumah_yatim_id: 201
+ *                       amount: 500000
+ *                       payment_method: "bank_transfer"
+ *                       status: "completed"
+ *                       created_at: "2023-05-15T10:30:00Z"
+ *       500:
+ *         description: Kesalahan server
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Terjadi kesalahan server"
+ */
 router.get('/', async (req, res) => {
   const redisClient = req.redisClient;
   try {
@@ -38,6 +86,58 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /cache/donation/{id}:
+ *   get:
+ *     summary: Mendapatkan detail donasi berdasarkan ID transaksi
+ *     description: |
+ *       Mengambil data spesifik satu transaksi donasi dengan sistem caching Redis.
+ *       Data akan di-cache selama 5 menit.
+ *     tags: [Donasi - Cache]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID transaksi donasi
+ *     responses:
+ *       200:
+ *         description: Berhasil mendapatkan data donasi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DonasiResponse'
+ *             examples:
+ *               fromCache:
+ *                 value:
+ *                   source: cache
+ *                   data:
+ *                     id: 1
+ *                     user_id: 101
+ *                     rumah_yatim_id: 201
+ *                     amount: 500000
+ *                     payment_method: "bank_transfer"
+ *                     status: "completed"
+ *                     created_at: "2023-05-15T10:30:00Z"
+ *       404:
+ *         description: Data donasi tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Donasi tidak ditemukan"
+ *       500:
+ *         description: Kesalahan server
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Server error"
+ */
 router.get('/:id', async (req, res) => {
     const id = req.params.id;
     const redisClient = req.redisClient;
@@ -72,6 +172,58 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /cache/donation/users/{id}:
+ *   get:
+ *     summary: Mendapatkan data donasi berdasarkan ID user
+ *     description: |
+ *       Mengambil data donasi spesifik berdasarkan ID user dengan caching Redis.
+ *       Data akan di-cache selama 5 menit.
+ *     tags: [Donasi - Cache]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID user
+ *     responses:
+ *       200:
+ *         description: Berhasil mendapatkan data donasi user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DonasiResponse'
+ *             examples:
+ *               fromDatabase:
+ *                 value:
+ *                   source: database
+ *                   data:
+ *                     id: 1
+ *                     user_id: 101
+ *                     rumah_yatim_id: 201
+ *                     amount: 500000
+ *                     payment_method: "bank_transfer"
+ *                     status: "completed"
+ *                     created_at: "2023-05-15T10:30:00Z"
+ *       404:
+ *         description: Data donasi tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Donasi tidak ditemukan"
+ *       500:
+ *         description: Kesalahan server
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Server error"
+ */
 router.get('/users/:id', async (req, res) => {
     const id = req.params.id;
     const redisClient = req.redisClient;
